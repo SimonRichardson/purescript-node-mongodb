@@ -26,10 +26,16 @@ type AffDatabase e = Aff (db :: DB | e) Database
 type AffCollection e = Aff (db :: DB | e) Collection
 type AffCursor e = Aff (db :: DB | e) Cursor 
 type AffResult e = Aff (db :: DB | e) Json
+type AffUnit e = Aff (db :: DB | e) Unit
 
 -- | Makes a connection to the database.
 connect :: forall e. ConnectionInfo -> AffDatabase e
 connect = makeAff' <<< connect'
+
+-- | Close the connection to the database
+close :: forall e. Database -> AffUnit e
+close = makeAff' <<< close'
+
 
 -- | Get the collection
 collection :: forall e. String -> Database -> AffCollection e
@@ -58,6 +64,13 @@ connect' :: forall e
   -> (Database -> Eff (db :: DB | e) Unit)
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 connect' info eb cb = runFn4 _connect (dialUri info) ignoreCancel eb cb
+
+close' :: forall e
+  .  Database
+  -> (Error -> Eff (db :: DB | e) Unit)
+  -> (Unit -> Eff (db :: DB | e) Unit)
+  -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
+close' database eb cb = runFn4 _close database ignoreCancel eb cb
 
 collection' :: forall e
   .  String
@@ -119,6 +132,21 @@ foreign import _connect
                    (Error -> Eff (db :: DB | e) Unit)
                    (Database -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
+
+foreign import _close
+  """
+  function _close(db, canceler, errback, callback) {
+    db.close(function(err, x) {
+      (err ? errback(err) : callback(x))();
+    });
+    return canceler({});
+  }
+  """ :: forall e. Fn4 
+                   Database
+                   (Unit -> Canceler (db :: DB | e))
+                   (Error -> Eff (db :: DB | e) Unit)
+                   (Unit -> Eff (db :: DB | e) Unit)
+                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))                   
 
 foreign import _collection
   """
@@ -212,7 +240,7 @@ foreign import _ignoreCancel
   """
   function _ignoreCancel(any, cancelError, errback, callback) {
     return function() {
-        callback(false);
+        return callback(false)();
     };
   }
   """ :: forall e a. Fn4 
