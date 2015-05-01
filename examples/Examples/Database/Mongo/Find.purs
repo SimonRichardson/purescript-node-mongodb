@@ -1,4 +1,4 @@
-module Examples.Database.Mongo.Example where
+module Examples.Database.Mongo.Find where
 
 import Database.Mongo.Mongo
 import Database.Mongo.ConnectionInfo
@@ -31,7 +31,7 @@ foreign import traceAny
 
 main = launchAff $ do
   
-  Right database <- attempt $ connect $ defaultOptions { db = Just "test" }
+  Right database <- attempt $ connect $ defaultOptions { db = Just "events" }
   col <- collection "events" database
   cur <- find [ 
                 "$or" := [ "name" := (regex "Amazing" noFlags)
