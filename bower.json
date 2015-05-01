@@ -8,15 +8,30 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "output"
+    "output",
+    "test",
+    "tests"
   ],
   "dependencies": {
-    "purescript-aff"                  : "0.10.x",
-    "purescript-argonaut"             : "0.5.x",
-    "purescript-datetime"             : "0.5.x",
-    "purescript-either"               : "0.1.x",
-    "purescript-maybe"                : "0.2.x",
-    "purescript-foldable-traversable" : "0.3.x",
-    "purescript-foreign"              : "0.4.x"
-  }
+    "purescript-aff": "0.10.x",
+    "purescript-argonaut": "0.5.x",
+    "purescript-datetime": "0.5.x",
+    "purescript-either": "0.1.x",
+    "purescript-maybe": "0.2.x",
+    "purescript-foldable-traversable": "0.3.x",
+    "purescript-foreign": "0.4.x"
+  },
+  "homepage": "https://github.com/dicefm/purescript-node-mongodb",
+  "authors": [
+    "SimonRichardson <simon@dice.fm>"
+  ],
+  "description": "PureScript Aff bindings for node-mongodb.",
+  "keywords": [
+    "purescript",
+    "node",
+    "aff",
+    "mongodb",
+    "mongo"
+  ],
+  "license": "MIT"
 }
