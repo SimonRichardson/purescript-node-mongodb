@@ -1,0 +1,22 @@
+{
+  "name": "purescript-node-mongodb",
+  "version": "0.0.1",
+  "moduleType": [
+    "node"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-aff"                  : "0.10.x",
+    "purescript-argonaut"             : "0.5.x",
+    "purescript-datetime"             : "0.5.x",
+    "purescript-either"               : "0.1.x",
+    "purescript-maybe"                : "0.2.x",
+    "purescript-foldable-traversable" : "0.3.x",
+    "purescript-foreign"              : "0.4.x"
+  }
+}
