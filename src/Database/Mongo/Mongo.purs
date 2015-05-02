@@ -1,4 +1,18 @@
-module Database.Mongo.Mongo where
+module Database.Mongo.Mongo 
+  ( DB()
+  , Client(), Database(), Collection(), Cursor()
+  , AffDatabase(), AffCollection(), AffCursor()
+  , AffResult(), AffUnit(), AffWriteResult()
+  , connect, connect'
+  , close, close'
+  , collection, collection'
+  , find, find'
+  , findOne, findOne'
+  , collect, collect'
+  , collectOne, collectOne'
+  , insertOne, insertOne'
+  , insertMany, insertMany'
+  ) where
 
 import Control.Monad.Aff (Aff(), makeAff, makeAff', Canceler(..))
 import Control.Monad.Eff (Eff())
@@ -6,12 +20,18 @@ import Control.Monad.Eff.Class
 import Control.Monad.Eff.Exception (Error(), error)
 import Control.Monad.Error.Class (throwError)
 
-import Data.Argonaut.Core (Json(..))
+import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject)
+import Data.Argonaut.Core (Json())
+import Data.Argonaut.Encode (EncodeJson, encodeJson)
+import Data.Argonaut.Decode (DecodeJson, decodeJson)
 import Data.Either
 import Data.Foreign
 import Data.Function (Fn4(), runFn4, Fn5(), runFn5, Fn6(), runFn6)
+import Data.Maybe
 
 import Database.Mongo.ConnectionInfo
+import Database.Mongo.Options (InsertOptions(), insertOptions)
+import Database.Mongo.Results (WriteResult())
 import Database.Mongo.Bson.BsonValue (Document(..), printBson)
 
 -- | The effect type for DB request made with Mongo
@@ -22,11 +42,12 @@ foreign import data Database :: *
 foreign import data Collection :: *
 foreign import data Cursor :: *
 
-type AffDatabase e = Aff (db :: DB | e) Database
-type AffCollection e = Aff (db :: DB | e) Collection
-type AffCursor e = Aff (db :: DB | e) Cursor 
-type AffResult e = Aff (db :: DB | e) Json
-type AffUnit e = Aff (db :: DB | e) Unit
+type AffDatabase e    = Aff (db :: DB | e) Database
+type AffCollection e  = Aff (db :: DB | e) Collection
+type AffCursor e      = Aff (db :: DB | e) Cursor 
+type AffResult e      = Aff (db :: DB | e) Json
+type AffUnit e        = Aff (db :: DB | e) Unit
+type AffWriteResult e = Aff (db :: DB | e) WriteResult
 
 -- | Makes a connection to the database.
 connect :: forall e. ConnectionInfo -> AffDatabase e
@@ -36,18 +57,17 @@ connect = makeAff' <<< connect'
 close :: forall e. Database -> AffUnit e
 close = makeAff' <<< close'
 
-
 -- | Get the collection
 collection :: forall e. String -> Database -> AffCollection e
 collection a b = makeAff' (collection' a b)
 
 -- | Find in the collection
 find :: forall e. Document -> Document -> Collection -> AffCursor e
-find s h c = makeAff' (find' (printBson s) (printBson h) c) 
+find s h c = makeAff' $ find' (printBson s) (printBson h) c
 
 -- | Find one item in the collection
 findOne :: forall e. Document -> Document -> Collection -> AffResult e
-findOne s h c = makeAff' (findOne' (printBson s) (printBson h) c)
+findOne s h c = makeAff' $ findOne' (printBson s) (printBson h) c
 
 -- | Collect the results from the cursor
 collect :: forall e. Cursor -> AffResult e
@@ -56,6 +76,14 @@ collect = makeAff' <<< collect'
 -- | Collect one result from the cursor
 collectOne :: forall e. Cursor -> AffResult e
 collectOne = makeAff' <<< collectOne'
+
+-- | Insert a new document using the selector, returning the write result
+insertOne :: forall e. Json -> InsertOptions -> Collection -> AffWriteResult e
+insertOne j o c = makeAff' $ insertOne' j o c
+
+-- | Insert a new document using the selector, returning the write result
+insertMany :: forall e. Json -> InsertOptions -> Collection -> AffWriteResult e
+insertMany j o c = makeAff' $ insertMany' j o c
 
 -- | Run a request directly without using 'Aff'
 connect' :: forall e
@@ -112,6 +140,34 @@ collectOne' :: forall e a
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 collectOne' c eb cb = runFn4 _collectOne c ignoreCancel eb cb
 
+insertOne' :: forall e
+  . Json
+  -> InsertOptions
+  -> Collection
+  -> (Error -> Eff (db :: DB | e) Unit)
+  -> (WriteResult -> Eff (db :: DB | e) Unit)
+  -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
+insertOne' j o c eb cb = runFn6 _insertOne j (insertOptions o) c ignoreCancel eb cb'
+  where
+    cb' :: Json -> Eff (db :: DB | e) Unit
+    cb' res = case decodeJson res of
+      Left err   -> eb $ error (show err)
+      Right res' -> cb res'
+
+insertMany' :: forall e
+  . Json
+  -> InsertOptions
+  -> Collection
+  -> (Error -> Eff (db :: DB | e) Unit)
+  -> (WriteResult -> Eff (db :: DB | e) Unit)
+  -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
+insertMany' j o c eb cb = runFn6 _insertMany j (insertOptions o) c ignoreCancel eb cb'
+  where
+    cb' :: Json -> Eff (db :: DB | e) Unit
+    cb' res = case decodeJson res of
+      Left err   -> eb $ error (show err)
+      Right res' -> cb res'
+
 -- | Always ignore the cancel.
 ignoreCancel :: forall e a. a -> Canceler (db :: DB | e)
 ignoreCancel c = Canceler \err -> makeAff (\eb cb -> runFn4 _ignoreCancel c err eb cb)
@@ -146,7 +202,7 @@ foreign import _close
                    (Unit -> Canceler (db :: DB | e))
                    (Error -> Eff (db :: DB | e) Unit)
                    (Unit -> Eff (db :: DB | e) Unit)
-                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))                   
+                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
 foreign import _collection
   """
@@ -190,13 +246,13 @@ foreign import _findOne
     return canceler(collection);
   }
   """ :: forall e. Fn6
-                     Foreign
-                     Foreign
-                     Collection
-                     (Collection -> Canceler (db :: DB | e))
-                     (Error -> Eff (db :: DB | e) Unit)
-                     (Json -> Eff (db :: DB | e) Unit)
-                     (Eff (db :: DB | e) (Canceler (db :: DB | e)))                   
+                   Foreign
+                   Foreign
+                   Collection
+                   (Collection -> Canceler (db :: DB | e))
+                   (Error -> Eff (db :: DB | e) Unit)
+                   (Json -> Eff (db :: DB | e) Unit)
+                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
 foreign import _collect
   """
@@ -207,11 +263,11 @@ foreign import _collect
     return canceler(cursor);
   }
   """ :: forall e. Fn4
-                     Cursor
-                     (Cursor -> Canceler (db :: DB | e))
-                     (Error -> Eff (db :: DB | e) Unit)
-                     (Json -> Eff (db :: DB | e) Unit)
-                     (Eff (db :: DB | e) (Canceler (db :: DB | e)))
+                   Cursor
+                   (Cursor -> Canceler (db :: DB | e))
+                   (Error -> Eff (db :: DB | e) Unit)
+                   (Json -> Eff (db :: DB | e) Unit)
+                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
 foreign import _collectOne
   """
@@ -230,11 +286,45 @@ foreign import _collectOne
     return canceler(cursor);
   }
   """ :: forall e. Fn4
-                     Cursor
-                     (Cursor -> Canceler (db :: DB | e))
-                     (Error -> Eff (db :: DB | e) Unit)
-                     (Json -> Eff (db :: DB | e) Unit)
-                     (Eff (db :: DB | e) (Canceler (db :: DB | e)))                    
+                   Cursor
+                   (Cursor -> Canceler (db :: DB | e))
+                   (Error -> Eff (db :: DB | e) Unit)
+                   (Json -> Eff (db :: DB | e) Unit)
+                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))
+
+foreign import _insertOne
+  """
+  function _insertOne(json, options, collection, canceler, errback, callback) {
+    collection.insertOne(json, options, function(err, x) {
+      (err ? errback(err) : callback(x.result))();
+    });
+    return canceler(collection);
+  }
+  """ :: forall e. Fn6
+                   Json
+                   Json
+                   Collection
+                   (Collection -> Canceler (db :: DB | e))
+                   (Error -> Eff (db :: DB | e) Unit)
+                   (Json -> Eff (db :: DB | e) Unit)
+                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))
+
+foreign import _insertMany
+  """
+  function _insertMany(json, options, collection, canceler, errback, callback) {
+    collection.insertMany(json, options, function(err, x) {
+      (err ? errback(err) : callback(x.result))();
+    });
+    return canceler(collection);
+  }
+  """ :: forall e. Fn6
+                   Json
+                   Json
+                   Collection
+                   (Collection -> Canceler (db :: DB | e))
+                   (Error -> Eff (db :: DB | e) Unit)
+                   (Json -> Eff (db :: DB | e) Unit)
+                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
 foreign import _ignoreCancel
   """
