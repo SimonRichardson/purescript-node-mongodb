@@ -8,9 +8,9 @@ module Database.Mongo.Bson.BsonValue
   , printBson
   ) where
 
-import Data.Tuple
-import Data.Foreign
+import Data.Argonaut.Core (Json())
 import Data.String.Regex
+import Data.Tuple
 
 type Field = Tuple String BsonValue
 
@@ -52,7 +52,7 @@ infix 0 :=
 (:=) :: forall a. (IsBsonValue a) => String -> a -> Tuple String BsonValue
 (:=) f v = Tuple f (toBson v)
 
-printBson :: forall a. Document -> Foreign
+printBson :: Document -> Json
 printBson = unsafeToBsonObject
 
 foreign import unsafeToBsonObject
@@ -71,4 +71,4 @@ foreign import unsafeToBsonObject
       return b;
     }, {});
   }
-  """ :: Document -> Foreign
+  """ :: Document -> Json

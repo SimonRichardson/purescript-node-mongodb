@@ -11,17 +11,25 @@ import Data.Maybe
 
 newtype WriteResult = WriteResult 
   { success  :: Boolean
-  , inserted :: Maybe Number 
+  , total    :: Number
+  , inserted :: Maybe Number
+  , modified :: Maybe Number
   }
 
 instance decodeJsonWriteResult :: DecodeJson WriteResult where
   decodeJson json = do
-    obj <- decodeJson json
-    ok  <- obj .? "ok"
-    n   <- obj .? "n"
+    obj      <- decodeJson json
+    ok       <- obj .? "ok"
+    n        <- obj .? "n"
+
+    let inserted = extract $ obj .? "nInserted"
+    let modified = extract $ obj .? "nModified"
+    
     pure $ WriteResult
       { success  : jsNumberToBool ok
-      , inserted : n
+      , total    : n
+      , inserted : inserted
+      , modified : modified
       }
 
 instance encodeJsonWriteResult :: EncodeJson WriteResult where
@@ -31,5 +39,10 @@ instance encodeJsonWriteResult :: EncodeJson WriteResult where
 -- as Javascript is abused!
 jsNumberToBool :: Either String Number -> Boolean
 jsNumberToBool e = case e of
-  Left _ -> false
+  Left _  -> false
   Right x -> if x == 1 then true else false
+
+extract :: Either String Number -> Maybe Number
+extract e = case e of
+  Left _  -> Nothing
+  Right x -> Just x
