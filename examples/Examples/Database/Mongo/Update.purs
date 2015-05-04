@@ -1,8 +1,10 @@
-module Examples.Database.Mongo.Find where
+module Examples.Database.Mongo.Update where
 
 import Database.Mongo.Mongo
 import Database.Mongo.ConnectionInfo
+import Database.Mongo.Options
 import Database.Mongo.Bson.BsonValue
+import Database.Mongo.Updatable
 
 import Control.Monad.Aff
 import Control.Monad.Eff
@@ -11,7 +13,7 @@ import Control.Monad.Eff.Exception
 
 import Data.Argonaut (printJson)
 import Data.Argonaut.Core (Json(..))
-import Data.Argonaut.Decode (DecodeJson, decodeJson)
+import Data.Argonaut.Encode (EncodeJson, encodeJson)
 import Data.Either
 import Data.Event
 import Data.Maybe
@@ -29,24 +31,17 @@ foreign import traceAny
   }
   """ :: forall e a. a -> Eff (trace :: Trace | e) Unit
 
+evt :: Event
+evt = Event
+  { name : Just "Wow!"
+  }
+
 main = launchAff $ do
   
   Right database <- attempt $ connect $ defaultOptions { db = Just "events" }
   col <- collection "events" database
-  cur <- find [ 
-                "$or" := [ "name" := (regex "Amazing" noFlags)
-                         , "name" := (regex "Wow!" noFlags)
-                         ]
-              ] [] col
-  res <- collect cur
+  res <- updateMany [] evt defaultUpdateOptions col
 
-  liftEff $ case decodeEvents res of
-    Left err -> traceAny err
-    Right x -> traceAny x
+  liftEff $ traceAny res
   
   close database
-
-
-  where
-    decodeEvents :: Json -> (Either String [Event])
-    decodeEvents = decodeJson

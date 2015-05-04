@@ -2,6 +2,7 @@ module Examples.Database.Mongo.Insert where
 
 import Database.Mongo.Mongo
 import Database.Mongo.ConnectionInfo
+import Database.Mongo.Options
 import Database.Mongo.Bson.BsonValue
 
 import Control.Monad.Aff
@@ -38,7 +39,7 @@ main = launchAff $ do
   
   Right database <- attempt $ connect $ defaultOptions { db = Just "events" }
   col <- collection "events" database
-  res <- insertOne (encodeJson evt) col
+  res <- insertOne evt defaultInsertOptions col
 
   liftEff $ traceAny res
   
