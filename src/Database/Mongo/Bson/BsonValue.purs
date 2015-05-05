@@ -25,6 +25,7 @@ data BsonValue
   | VDocument [Tuple String BsonValue]
   | VArray    [BsonValue]
   | VObjectId ObjectId
+  | VJson     Json
 
 class IsBsonValue a where
   toBson :: a -> BsonValue
@@ -46,6 +47,9 @@ instance arrayBson :: IsBsonValue [BsonValue] where
 
 instance objectIdBson :: IsBsonValue ObjectId where
   toBson = VObjectId
+
+instance jsonBson :: IsBsonValue Json where
+  toBson = VJson
 
 infix 0 :=
     

@@ -34,7 +34,6 @@ import Data.Maybe
 import Database.Mongo.ConnectionInfo
 import Database.Mongo.Options (InsertOptions(), insertOptions, UpdateOptions(), updateOptions)
 import Database.Mongo.Results (WriteResult())
-import Database.Mongo.Updatable (Updatable(..), printUpdatable)
 import Database.Mongo.Bson.BsonValue (Document(..), printBson)
 
 -- | The effect type for DB request made with Mongo
@@ -48,7 +47,7 @@ foreign import data Cursor :: *
 type AffDatabase e    = Aff (db :: DB | e) Database
 type AffCollection e  = Aff (db :: DB | e) Collection
 type AffCursor e      = Aff (db :: DB | e) Cursor 
-type AffResult e      = Aff (db :: DB | e) Json
+type AffResult e a    = Aff (db :: DB | e) a
 type AffUnit e        = Aff (db :: DB | e) Unit
 type AffWriteResult e = Aff (db :: DB | e) WriteResult
 
@@ -82,7 +81,7 @@ collection :: forall e. String -> Database -> AffCollection e
 collection a b = makeAff' (collection' a b)
 
 -- | Find one item in the collection
-findOne :: forall e. Document -> Document -> Collection -> AffResult e
+findOne :: forall e a. (DecodeJson a) => Document -> Document -> Collection -> AffResult e a
 findOne s h c = makeAff' $ findOne' s h c
 
 -- | Find in the collection (essentially findMany)
@@ -90,11 +89,11 @@ find :: forall e. Document -> Document -> Collection -> AffCursor e
 find s h c = makeAff' $ find' s h c
 
 -- | Collect the results from the cursor
-collect :: forall e. Cursor -> AffResult e
+collect :: forall e a. (DecodeJson a) => Cursor -> AffResult e a
 collect = makeAff' <<< collect'
 
 -- | Collect one result from the cursor
-collectOne :: forall e. Cursor -> AffResult e
+collectOne :: forall e a. (DecodeJson a) => Cursor -> AffResult e a
 collectOne = makeAff' <<< collectOne'
 
 -- | Insert a new document using the selector, returning the write result
@@ -106,11 +105,11 @@ insertMany :: forall e a. (EncodeJson a) => a -> InsertOptions -> Collection -> 
 insertMany j o c = makeAff' $ insertMany' j o c
 
 -- | Update a new document using the selector, returning the write result
-updateOne :: forall e a. (EncodeJson a) => Document -> a -> UpdateOptions -> Collection -> AffWriteResult e
+updateOne :: forall e. Document -> Fields -> UpdateOptions -> Collection -> AffWriteResult e
 updateOne s j o c = makeAff' $ updateOne' s j o c
 
 -- | Update documents using the selector, returning the write result
-updateMany :: forall e a. (EncodeJson a) => Document -> a -> UpdateOptions -> Collection -> AffWriteResult e
+updateMany :: forall e. Document -> Fields -> UpdateOptions -> Collection -> AffWriteResult e
 updateMany s j o c = makeAff' $ updateMany' s j o c
 
 -- | Run a request directly without using 'Aff'
@@ -136,14 +135,20 @@ collection' :: forall e
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 collection' name d eb cb = runFn5 _collection name d ignoreCancel eb cb
 
-findOne' :: forall e
-  .  Selector
+findOne' :: forall e a
+  .  (DecodeJson a)
+  => Selector
   -> Fields
   -> Collection
   -> (Error -> Eff (db :: DB | e) Unit)
-  -> (Json -> Eff (db :: DB | e) Unit)
+  -> (a -> Eff (db :: DB | e) Unit)
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
-findOne' s h c eb cb = runFn6 _findOne (printBson s) (printBson h) c ignoreCancel eb cb
+findOne' s h c eb cb = runFn6 _findOne (printBson s) (printBson h) c ignoreCancel eb cb'
+  where
+    cb' :: Json -> Eff (db :: DB | e) Unit
+    cb' res = case decodeJson res of
+      Left err   -> eb $ error (show err)
+      Right res' -> cb res'
 
 find' :: forall e
   .  Selector
@@ -154,19 +159,31 @@ find' :: forall e
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 find' s h c eb cb = runFn6 _find (printBson s) (printBson h) c ignoreCancel eb cb
 
-collect' :: forall e
-  .  Cursor
+collect' :: forall e a
+  .  (DecodeJson a)
+  => Cursor
   -> (Error -> Eff (db :: DB | e) Unit)
-  -> (Json -> Eff (db :: DB | e) Unit)
+  -> (a -> Eff (db :: DB | e) Unit)
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
-collect' c eb cb = runFn4 _collect c ignoreCancel eb cb
+collect' c eb cb = runFn4 _collect c ignoreCancel eb cb'
+  where
+    cb' :: Json -> Eff (db :: DB | e) Unit
+    cb' res = case decodeJson res of
+      Left err   -> eb $ error (show err)
+      Right res' -> cb res'
 
 collectOne' :: forall e a
-  .  Cursor
+  .  (DecodeJson a)
+  => Cursor
   -> (Error -> Eff (db :: DB | e) Unit)
-  -> (Json -> Eff (db :: DB | e) Unit)
+  -> (a -> Eff (db :: DB | e) Unit)
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
-collectOne' c eb cb = runFn4 _collectOne c ignoreCancel eb cb
+collectOne' c eb cb = runFn4 _collectOne c ignoreCancel eb cb'
+  where
+    cb' :: Json -> Eff (db :: DB | e) Unit
+    cb' res = case decodeJson res of
+      Left err   -> eb $ error (show err)
+      Right res' -> cb res'
 
 insertOne' :: forall e a
   .  (EncodeJson a)
@@ -202,10 +219,9 @@ insertMany' j o c eb cb = runFn7 _insert fnTypeMany j' (insertOptions o) c ignor
       Left err   -> eb $ error (show err)
       Right res' -> cb res'
 
-updateOne' :: forall e a
-  .  (EncodeJson a)
-  => Selector
-  -> a
+updateOne' :: forall e
+  .  Selector
+  -> Fields
   -> UpdateOptions
   -> Collection
   -> (Error -> Eff (db :: DB | e) Unit)
@@ -213,17 +229,16 @@ updateOne' :: forall e a
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 updateOne' s j o c eb cb = runFn8 _update fnTypeOne (printBson s) j' o' c ignoreCancel eb cb'
   where
-    j' = printUpdatable (URaw $ encodeJson j)
+    j' = printBson j
     o' = updateOptions o
     cb' :: Json -> Eff (db :: DB | e) Unit
     cb' res = case decodeJson res of
       Left err   -> eb $ error (show err)
       Right res' -> cb res'
 
-updateMany' :: forall e a
-  .  (EncodeJson a)
-  => Selector
-  -> a
+updateMany' :: forall e
+  .  Selector
+  -> Fields
   -> UpdateOptions
   -> Collection
   -> (Error -> Eff (db :: DB | e) Unit)
@@ -231,7 +246,7 @@ updateMany' :: forall e a
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 updateMany' s j o c eb cb = runFn8 _update fnTypeMany (printBson s) j' o' c ignoreCancel eb cb'
   where
-    j' = printUpdatable (USet $ encodeJson j)
+    j' = printBson j
     o' = updateOptions o
     cb' :: Json -> Eff (db :: DB | e) Unit
     cb' res = case decodeJson res of

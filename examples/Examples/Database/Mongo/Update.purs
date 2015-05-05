@@ -4,7 +4,6 @@ import Database.Mongo.Mongo
 import Database.Mongo.ConnectionInfo
 import Database.Mongo.Options
 import Database.Mongo.Bson.BsonValue
-import Database.Mongo.Updatable
 
 import Control.Monad.Aff
 import Control.Monad.Eff
