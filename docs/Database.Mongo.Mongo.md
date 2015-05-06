@@ -62,7 +62,7 @@ type AffCursor e = Aff (db :: DB | e) Cursor
 #### `AffResult`
 
 ``` purescript
-type AffResult e = Aff (db :: DB | e) Json
+type AffResult e a = Aff (db :: DB | e) a
 ```
 
 
@@ -77,6 +77,27 @@ type AffUnit e = Aff (db :: DB | e) Unit
 
 ``` purescript
 type AffWriteResult e = Aff (db :: DB | e) WriteResult
+```
+
+
+#### `Selector`
+
+``` purescript
+type Selector = Document
+```
+
+
+#### `Fields`
+
+``` purescript
+type Fields = Document
+```
+
+
+#### `showMethodType`
+
+``` purescript
+instance showMethodType :: Show FnType
 ```
 
 
@@ -104,26 +125,26 @@ collection :: forall e. String -> Database -> AffCollection e
 
 Get the collection
 
+#### `findOne`
+
+``` purescript
+findOne :: forall e a. (DecodeJson a) => Document -> Document -> Collection -> AffResult e a
+```
+
+Find one item in the collection
+
 #### `find`
 
 ``` purescript
 find :: forall e. Document -> Document -> Collection -> AffCursor e
 ```
 
-Find in the collection
-
-#### `findOne`
-
-``` purescript
-findOne :: forall e. Document -> Document -> Collection -> AffResult e
-```
-
-Find one item in the collection
+Find in the collection (essentially findMany)
 
 #### `collect`
 
 ``` purescript
-collect :: forall e. Cursor -> AffResult e
+collect :: forall e a. (DecodeJson a) => Cursor -> AffResult e a
 ```
 
 Collect the results from the cursor
@@ -131,7 +152,7 @@ Collect the results from the cursor
 #### `collectOne`
 
 ``` purescript
-collectOne :: forall e. Cursor -> AffResult e
+collectOne :: forall e a. (DecodeJson a) => Cursor -> AffResult e a
 ```
 
 Collect one result from the cursor
@@ -139,7 +160,7 @@ Collect one result from the cursor
 #### `insertOne`
 
 ``` purescript
-insertOne :: forall e. Json -> InsertOptions -> Collection -> AffWriteResult e
+insertOne :: forall e a. (EncodeJson a) => a -> InsertOptions -> Collection -> AffWriteResult e
 ```
 
 Insert a new document using the selector, returning the write result
@@ -147,10 +168,26 @@ Insert a new document using the selector, returning the write result
 #### `insertMany`
 
 ``` purescript
-insertMany :: forall e. Json -> InsertOptions -> Collection -> AffWriteResult e
+insertMany :: forall e a. (EncodeJson a) => a -> InsertOptions -> Collection -> AffWriteResult e
 ```
 
-Insert a new document using the selector, returning the write result
+Insert new documents using the selector, returning the write result
+
+#### `updateOne`
+
+``` purescript
+updateOne :: forall e. Document -> Fields -> UpdateOptions -> Collection -> AffWriteResult e
+```
+
+Update a new document using the selector, returning the write result
+
+#### `updateMany`
+
+``` purescript
+updateMany :: forall e. Document -> Fields -> UpdateOptions -> Collection -> AffWriteResult e
+```
+
+Update documents using the selector, returning the write result
 
 #### `connect'`
 
@@ -174,45 +211,59 @@ collection' :: forall e. String -> Database -> (Error -> Eff (db :: DB | e) Unit
 ```
 
 
-#### `find'`
-
-``` purescript
-find' :: forall e. Foreign -> Foreign -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (Cursor -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
-```
-
-
 #### `findOne'`
 
 ``` purescript
-findOne' :: forall e. Foreign -> Foreign -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (Json -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
+findOne' :: forall e a. (DecodeJson a) => Selector -> Fields -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (a -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
+```
+
+
+#### `find'`
+
+``` purescript
+find' :: forall e. Selector -> Fields -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (Cursor -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
 ```
 
 
 #### `collect'`
 
 ``` purescript
-collect' :: forall e. Cursor -> (Error -> Eff (db :: DB | e) Unit) -> (Json -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
+collect' :: forall e a. (DecodeJson a) => Cursor -> (Error -> Eff (db :: DB | e) Unit) -> (a -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
 ```
 
 
 #### `collectOne'`
 
 ``` purescript
-collectOne' :: forall e a. Cursor -> (Error -> Eff (db :: DB | e) Unit) -> (Json -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
+collectOne' :: forall e a. (DecodeJson a) => Cursor -> (Error -> Eff (db :: DB | e) Unit) -> (a -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
 ```
 
 
 #### `insertOne'`
 
 ``` purescript
-insertOne' :: forall e. Json -> InsertOptions -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (WriteResult -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
+insertOne' :: forall e a. (EncodeJson a) => a -> InsertOptions -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (WriteResult -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
 ```
 
 
 #### `insertMany'`
 
 ``` purescript
-insertMany' :: forall e. Json -> InsertOptions -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (WriteResult -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
+insertMany' :: forall e a. (EncodeJson a) => a -> InsertOptions -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (WriteResult -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
+```
+
+
+#### `updateOne'`
+
+``` purescript
+updateOne' :: forall e. Selector -> Fields -> UpdateOptions -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (WriteResult -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
+```
+
+
+#### `updateMany'`
+
+``` purescript
+updateMany' :: forall e. Selector -> Fields -> UpdateOptions -> Collection -> (Error -> Eff (db :: DB | e) Unit) -> (WriteResult -> Eff (db :: DB | e) Unit) -> Eff (db :: DB | e) (Canceler (db :: DB | e))
 ```
 
 

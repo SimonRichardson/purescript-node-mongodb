@@ -33,20 +33,9 @@ main = launchAff $ do
   
   Right database <- attempt $ connect $ defaultOptions { db = Just "events" }
   col <- collection "events" database
-  cur <- find [ 
-                "$or" := [ "name" := (regex "Amazing" noFlags)
-                         , "name" := (regex "Wow!" noFlags)
-                         ]
-              ] [] col
+  cur <- find [ "name" := "Wow!" ] [ "name" := 1 ] col
   res <- collect cur
 
-  liftEff $ case decodeEvents res of
-    Left err -> traceAny err
-    Right x -> traceAny x
+  liftEff $ traceAny (res :: [Event])
   
   close database
-
-
-  where
-    decodeEvents :: Json -> (Either String [Event])
-    decodeEvents = decodeJson
