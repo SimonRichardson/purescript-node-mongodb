@@ -2,6 +2,7 @@
 /bower_components/
 /output/
 /src/Examples/
+/tmp/
 .psci_modules
 .pscii
 .DS_Store

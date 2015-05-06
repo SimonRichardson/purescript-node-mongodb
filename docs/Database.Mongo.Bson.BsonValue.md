@@ -34,6 +34,7 @@ data BsonValue
   | VDocument [Tuple String BsonValue]
   | VArray [BsonValue]
   | VObjectId ObjectId
+  | VJson Json
 ```
 
 
@@ -87,6 +88,13 @@ instance objectIdBson :: IsBsonValue ObjectId
 ```
 
 
+#### `jsonBson`
+
+``` purescript
+instance jsonBson :: IsBsonValue Json
+```
+
+
 #### `(:=)`
 
 ``` purescript
@@ -97,7 +105,7 @@ instance objectIdBson :: IsBsonValue ObjectId
 #### `printBson`
 
 ``` purescript
-printBson :: forall a. Document -> Foreign
+printBson :: Document -> Json
 ```
 
 
