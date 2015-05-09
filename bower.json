@@ -1,6 +1,6 @@
 {
   "name": "purescript-node-mongodb",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "moduleType": [
     "node"
   ],
@@ -19,7 +19,8 @@
     "purescript-either": "0.1.x",
     "purescript-maybe": "0.2.x",
     "purescript-foldable-traversable": "0.3.x",
-    "purescript-foreign": "0.4.x"
+    "purescript-foreign": "0.4.x",
+    "purescript-uri": "master"
   },
   "homepage": "https://github.com/dicefm/purescript-node-mongodb",
   "authors": [
