@@ -28,13 +28,15 @@ import Data.Argonaut.Core (Json())
 import Data.Argonaut.Encode (EncodeJson, encodeJson)
 import Data.Argonaut.Decode (DecodeJson, decodeJson)
 import Data.Either
-import Data.Function (Fn4(), runFn4, Fn5(), runFn5, Fn6(), runFn6, Fn7(), runFn7, Fn8(), runFn8)
+import Data.Function (Fn3(), runFn3, Fn4(), runFn4, Fn5(), runFn5, Fn6(), runFn6, Fn7(), runFn7, Fn8(), runFn8)
 import Data.Maybe
+import Data.URI
 
-import Database.Mongo.ConnectionInfo
 import Database.Mongo.Options (InsertOptions(), insertOptions, UpdateOptions(), updateOptions)
 import Database.Mongo.Results (WriteResult())
 import Database.Mongo.Bson.BsonValue (Document(..), printBson)
+
+import Text.Parsing.StringParser
 
 -- | The effect type for DB request made with Mongo
 foreign import data DB :: !
@@ -69,7 +71,7 @@ instance showMethodType :: Show FnType where
   show Many = "Many"
 
 -- | Makes a connection to the database.
-connect :: forall e. ConnectionInfo -> AffDatabase e
+connect :: forall e. String -> AffDatabase e
 connect = makeAff' <<< connect'
 
 -- | Close the connection to the database
@@ -114,11 +116,17 @@ updateMany s j o c = makeAff' $ updateMany' s j o c
 
 -- | Run a request directly without using 'Aff'
 connect' :: forall e
-  .  ConnectionInfo
+  .  String
   -> (Error -> Eff (db :: DB | e) Unit)
   -> (Database -> Eff (db :: DB | e) Unit)
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
-connect' info eb cb = runFn4 _connect (dialUri info) ignoreCancel eb cb
+connect' s eb cb = do
+  case parseFileURI s of 
+    Left err -> runFn3 _handleParseFailure (err' err) ignoreCancel eb
+    Right x  -> runFn4 _connect (printURI x) ignoreCancel eb cb
+  where
+    err' :: ParseError -> Error
+    err' e = error $ show e
 
 close' :: forall e
   .  Database
@@ -268,10 +276,25 @@ foreign import _connect
     return canceler(client);
   }
   """ :: forall e. Fn4 
-                   Uri
+                   String
                    (Client -> Canceler (db :: DB | e))
                    (Error -> Eff (db :: DB | e) Unit)
                    (Database -> Eff (db :: DB | e) Unit)
+                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))
+
+foreign import _handleParseFailure
+  """
+  function _handleParseFailure(err, canceler, errback) {
+    process.nextTick(function() {
+      errback(err);
+    });
+    var client = require('mongodb').MongoClient;
+    return canceler(client);
+  }
+  """ :: forall e. Fn3 
+                   Error
+                   (Client -> Canceler (db :: DB | e))
+                   (Error -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
 foreign import _close
