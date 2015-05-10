@@ -17,7 +17,7 @@ module Database.Mongo.Mongo
   , updateMany, updateMany'
   ) where
 
-import Control.Monad.Aff (Aff(), makeAff, makeAff', Canceler(..))
+import Control.Monad.Aff (Aff(), makeAff, makeAff', Canceler(..), nonCanceler)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Class
 import Control.Monad.Eff.Exception (Error(), error)
@@ -263,7 +263,7 @@ updateMany' s j o c eb cb = runFn8 _update fnTypeMany (printBson s) j' o' c igno
 
 -- | Always ignore the cancel.
 ignoreCancel :: forall e a. a -> Canceler (db :: DB | e)
-ignoreCancel c = Canceler \err -> makeAff (\eb cb -> runFn4 _ignoreCancel c err eb cb)
+ignoreCancel _ = nonCanceler
 
 -- | foreign imports
 foreign import _connect
@@ -436,17 +436,3 @@ foreign import _update
                    (Error -> Eff (db :: DB | e) Unit)
                    (Json -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
-
-foreign import _ignoreCancel
-  """
-  function _ignoreCancel(any, cancelError, errback, callback) {
-    return function() {
-        return callback(false)();
-    };
-  }
-  """ :: forall e a. Fn4 
-                     a
-                     Error
-                     (Error -> Eff (db :: DB | e) Unit)
-                     (Boolean -> Eff (db :: DB | e) Unit)
-                     (Eff (db :: DB | e) Unit)
