@@ -6,6 +6,7 @@ module Database.Mongo.Options
   , defaultUpdateOptions, updateOptions
   ) where
 
+import Prelude
 import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject)
 import Data.Argonaut.Core (Json())
 import Data.Argonaut.Encode (EncodeJson, encodeJson)

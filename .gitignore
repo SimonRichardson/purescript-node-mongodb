@@ -3,6 +3,7 @@
 /output/
 /src/Examples/
 /tmp/
+/.pulp-cache
 .psci_modules
 .pscii
 .DS_Store
