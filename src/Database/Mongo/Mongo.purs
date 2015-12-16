@@ -1,4 +1,4 @@
-module Database.Mongo.Mongo 
+module Database.Mongo.Mongo
   ( DB()
   , Client(), Database(), Collection(), Cursor()
   , AffDatabase(), AffCollection(), AffCursor()
@@ -17,24 +17,21 @@ module Database.Mongo.Mongo
   , updateMany, updateMany'
   ) where
 
-import Control.Monad.Aff (Aff(), makeAff, makeAff', Canceler(..), nonCanceler)
+import Prelude
+import Control.Monad.Aff (Aff(), makeAff', Canceler(), nonCanceler)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Class
 import Control.Monad.Eff.Exception (Error(), error)
-import Control.Monad.Error.Class (throwError)
 
-import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject)
 import Data.Argonaut.Core (Json())
 import Data.Argonaut.Encode (EncodeJson, encodeJson)
 import Data.Argonaut.Decode (DecodeJson, decodeJson)
 import Data.Either
 import Data.Function (Fn3(), runFn3, Fn4(), runFn4, Fn5(), runFn5, Fn6(), runFn6, Fn7(), runFn7, Fn8(), runFn8)
-import Data.Maybe
 import Data.URI
 
 import Database.Mongo.Options (InsertOptions(), insertOptions, UpdateOptions(), updateOptions)
 import Database.Mongo.Results (WriteResult())
-import Database.Mongo.Bson.BsonValue (Document(..), printBson)
+import Database.Mongo.Bson.BsonValue (Document(), printBson)
 
 import Text.Parsing.StringParser
 
@@ -48,7 +45,7 @@ foreign import data Cursor :: *
 
 type AffDatabase e    = Aff (db :: DB | e) Database
 type AffCollection e  = Aff (db :: DB | e) Collection
-type AffCursor e      = Aff (db :: DB | e) Cursor 
+type AffCursor e      = Aff (db :: DB | e) Cursor
 type AffResult e a    = Aff (db :: DB | e) a
 type AffUnit e        = Aff (db :: DB | e) Unit
 type AffWriteResult e = Aff (db :: DB | e) WriteResult
@@ -121,9 +118,9 @@ connect' :: forall e
   -> (Database -> Eff (db :: DB | e) Unit)
   -> (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 connect' s eb cb = do
-  case parseFileURI s of 
+  case runParseURIRef s of
     Left err -> runFn3 _handleParseFailure (err' err) ignoreCancel eb
-    Right x  -> runFn4 _connect (printURI x) ignoreCancel eb cb
+    Right x  -> runFn4 _connect (printURIRef x) ignoreCancel eb cb
   where
     err' :: ParseError -> Error
     err' e = error $ show e
@@ -259,122 +256,56 @@ updateMany' s j o c eb cb = runFn8 _update fnTypeMany (printBson s) j' o' c igno
     cb' :: Json -> Eff (db :: DB | e) Unit
     cb' res = case decodeJson res of
       Left err   -> eb $ error (show err)
-      Right res' -> cb res'      
+      Right res' -> cb res'
 
 -- | Always ignore the cancel.
 ignoreCancel :: forall e a. a -> Canceler (db :: DB | e)
 ignoreCancel _ = nonCanceler
 
 -- | foreign imports
-foreign import _connect
-  """
-  function _connect(uri, canceler, errback, callback) {
-    var client = require('mongodb').MongoClient;
-    client.connect(uri, function(err, x) {
-      (err ? errback(err) : callback(x))();
-    });
-    return canceler(client);
-  }
-  """ :: forall e. Fn4 
+foreign import _connect :: forall e. Fn4
                    String
                    (Client -> Canceler (db :: DB | e))
                    (Error -> Eff (db :: DB | e) Unit)
                    (Database -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
-foreign import _handleParseFailure
-  """
-  function _handleParseFailure(err, canceler, errback) {
-    process.nextTick(function() {
-      errback(err)();
-    });
-    var client = require('mongodb').MongoClient;
-    return canceler(client);
-  }
-  """ :: forall e. Fn3 
+foreign import _handleParseFailure :: forall e. Fn3
                    Error
                    (Client -> Canceler (db :: DB | e))
                    (Error -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
-foreign import _close
-  """
-  function _close(db, canceler, errback, callback) {
-    db.close(function(err, x) {
-      (err ? errback(err) : callback(x))();
-    });
-    return canceler({});
-  }
-  """ :: forall e. Fn4 
+foreign import _close :: forall e. Fn4
                    Database
                    (Unit -> Canceler (db :: DB | e))
                    (Error -> Eff (db :: DB | e) Unit)
                    (Unit -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
-foreign import _collection
-  """
-  function _collection(name, db, canceler, errback, callback) {
-    db.collection(name, function(err, x) {
-      (err ? errback(err) : callback(x))();
-    });
-    return canceler(db);
-  }
-  """ :: forall e. Fn5 
-                   String 
+foreign import _collection :: forall e. Fn5
+                   String
                    Database
                    (Database -> Canceler (db :: DB | e))
                    (Error -> Eff (db :: DB | e) Unit)
                    (Collection -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
-foreign import _collect
-  """
-  function _collect(cursor, canceler, errback, callback) {
-    cursor.toArray(function(err, x) {
-      (err ? errback(err) : callback(x))();
-    });
-    return canceler(cursor);
-  }
-  """ :: forall e. Fn4
+foreign import _collect :: forall e. Fn4
                    Cursor
                    (Cursor -> Canceler (db :: DB | e))
                    (Error -> Eff (db :: DB | e) Unit)
                    (Json -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
-foreign import _collectOne
-  """
-  function _collectOne(cursor, canceler, errback, callback) {
-    cursor.next(function(err, x) {
-      if (err) {
-        errback(err)();
-      } else if (x === null) {
-        var error = new Error('Not Found.');
-        error.name = 'MongoError';
-        errback(error)();
-      } else {
-        callback(x)();
-      }      
-    });
-    return canceler(cursor);
-  }
-  """ :: forall e. Fn4
+foreign import _collectOne :: forall e. Fn4
                    Cursor
                    (Cursor -> Canceler (db :: DB | e))
                    (Error -> Eff (db :: DB | e) Unit)
                    (Json -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
-foreign import _findOne
-  """
-  function _findOne(selector, fields, collection, canceler, errback, callback) {
-    collection.findOne(selector, fields, function(err, x) {
-      (err ? errback(err) : callback(x))();
-    });
-    return canceler(collection);
-  }
-  """ :: forall e. Fn6
+foreign import _findOne :: forall e. Fn6
                    Json
                    Json
                    Collection
@@ -383,32 +314,16 @@ foreign import _findOne
                    (Json -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
-foreign import _find
-  """
-  function _find(selector, fields, collection, canceler, errback, callback) {
-    collection.find(selector, fields, function(err, x) {
-      (err ? errback(err) : callback(x))();
-    });
-    return canceler(collection);
-  }
-  """ :: forall e. Fn6
+foreign import _find :: forall e. Fn6
                    Json
                    Json
                    Collection
                    (Collection -> Canceler (db :: DB | e))
                    (Error -> Eff (db :: DB | e) Unit)
                    (Cursor -> Eff (db :: DB | e) Unit)
-                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))                   
+                   (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
-foreign import _insert
-  """
-  function _insert(type, json, options, collection, canceler, errback, callback) {
-    collection["insert" + type](json, options, function(err, x) {
-      (err ? errback(err) : callback(x.result))();
-    });
-    return canceler(collection);
-  }
-  """ :: forall e. Fn7
+foreign import _insert :: forall e. Fn7
                    String
                    Json
                    Json
@@ -418,15 +333,7 @@ foreign import _insert
                    (Json -> Eff (db :: DB | e) Unit)
                    (Eff (db :: DB | e) (Canceler (db :: DB | e)))
 
-foreign import _update
-  """
-  function _update(type, selector, json, options, collection, canceler, errback, callback) {
-    collection["update" + type](selector, json, options, function(err, x) {
-      (err ? errback(err) : callback(x.result))();
-    });
-    return canceler(collection);
-  }
-  """ :: forall e. Fn8
+foreign import _update :: forall e. Fn8
                    String
                    Json
                    Json

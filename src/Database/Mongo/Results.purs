@@ -2,9 +2,9 @@ module Database.Mongo.Results
   ( WriteResult()
   ) where
 
-import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject)
-import Data.Argonaut.Core (Json())
-import Data.Argonaut.Encode (EncodeJson, encodeJson)
+import Prelude
+import Data.Argonaut ((.?), jsonEmptyObject)
+import Data.Argonaut.Encode (EncodeJson)
 import Data.Argonaut.Decode (DecodeJson, decodeJson)
 import Data.Either
 import Data.Maybe
@@ -37,7 +37,7 @@ instance encodeJsonWriteResult :: EncodeJson WriteResult where
 
 -- node mongodb module sends back `1` to mean `true`, this is why we need types
 -- as Javascript is abused!
-jsNumberToBool :: Either String Number -> Boolean
+jsNumberToBool :: Either String Int -> Boolean
 jsNumberToBool e = case e of
   Left _  -> false
   Right x -> if x == 1 then true else false
