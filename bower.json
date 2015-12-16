@@ -22,7 +22,7 @@
     "purescript-foreign": "~0.7.2",
     "purescript-uri": "~0.2.0"
   },
-  "homepage": "https://github.com/chrisdotcode/purescript-node-mongodb",
+  "homepage": "https://github.com/dicefm/purescript-node-mongodb",
   "authors": [
     "SimonRichardson <simon@dice.fm>",
     "Chris Blake <chris@code.sc> (https://code.sc)"
