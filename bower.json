@@ -13,7 +13,7 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-aff": "~0.13.1",
+    "purescript-aff": "~0.16.0",
     "purescript-argonaut": "~0.12.0",
     "purescript-datetime": "~0.9.1",
     "purescript-either": "~0.2.3",
