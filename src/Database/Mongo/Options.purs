@@ -9,8 +9,8 @@ module Database.Mongo.Options
 import Prelude
 import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject)
 import Data.Argonaut.Core (Json())
-import Data.Argonaut.Encode (EncodeJson, encodeJson)
-import Data.Argonaut.Decode (DecodeJson, decodeJson)
+import Data.Argonaut.Encode (class EncodeJson, encodeJson)
+import Data.Argonaut.Decode (class DecodeJson, decodeJson)
 import Data.Either
 import Data.Maybe
 
@@ -19,7 +19,7 @@ type WriteConcern = Number
 
 -- | Typed options for inserting documents into a collection.
 newtype InsertOptions = InsertOptions
-  { writeConcern :: Maybe WriteConcern 
+  { writeConcern :: Maybe WriteConcern
   , journaled    :: Maybe Boolean
   }
 
@@ -39,7 +39,7 @@ instance decodeJsonInsertOptions :: DecodeJson InsertOptions where
     j    <- obj .? "j"
     pure $ InsertOptions
       { writeConcern : w
-      , journaled    : j  
+      , journaled    : j
       }
 
 instance encodeJsonInsertOptions :: EncodeJson InsertOptions where
@@ -50,7 +50,7 @@ instance encodeJsonInsertOptions :: EncodeJson InsertOptions where
 
 -- | Typed options for updating documents into a collection.
 newtype UpdateOptions = UpdateOptions
-  { writeConcern :: Maybe WriteConcern 
+  { writeConcern :: Maybe WriteConcern
   , journaled    :: Maybe Boolean
   , upsert       :: Maybe Boolean
   }
@@ -73,7 +73,7 @@ instance decodeJsonUpdateOptions :: DecodeJson UpdateOptions where
     upsert <- obj .? "upsert"
     pure $ UpdateOptions
       { writeConcern : w
-      , journaled    : j  
+      , journaled    : j
       , upsert       : upsert
       }
 

@@ -23,15 +23,15 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (Error(), error)
 
 import Data.Argonaut.Core (Json())
-import Data.Argonaut.Encode (EncodeJson, encodeJson)
-import Data.Argonaut.Decode (DecodeJson, decodeJson)
+import Data.Argonaut.Encode (class EncodeJson, encodeJson)
+import Data.Argonaut.Decode (class DecodeJson, decodeJson)
 import Data.Either
-import Data.Function (Fn3(), runFn3, Fn4(), runFn4, Fn5(), runFn5, Fn6(), runFn6, Fn7(), runFn7, Fn8(), runFn8)
-import Data.URI
+import Data.Function.Uncurried (Fn3(), runFn3, Fn4(), runFn4, Fn5(), runFn5, Fn6(), runFn6, Fn7(), runFn7, Fn8(), runFn8)
 
 import Database.Mongo.Options (InsertOptions(), insertOptions, UpdateOptions(), updateOptions)
 import Database.Mongo.Results (WriteResult())
 import Database.Mongo.Bson.BsonValue (Document(), printBson)
+import Data.URI
 
 import Text.Parsing.StringParser
 

@@ -7,3 +7,7 @@
 .psci_modules
 .pscii
 .DS_Store
+.psc-ide-port
+psc-ide-server.tix
+psc.tix
+psci.tix
