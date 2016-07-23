@@ -33,12 +33,12 @@ uri :: String
 uri = "mongodb://127.0.0.1/events"
 
 main = launchAff $ do
-  
+
   Right database <- attempt $ connect uri
   col <- collection "events" database
   cur <- find [ "name" := "Wow!" ] [ "name" := 1 ] col
   res <- collect cur
 
   liftEff $ traceAny (res :: [Event])
-  
+
   close database

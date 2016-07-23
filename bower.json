@@ -19,7 +19,7 @@
     "purescript-foldable-traversable": "^1.0.0",
     "purescript-foreign": "^1.0.0",
     "purescript-string-parsers": "^1.0.1",
-    "purescript-uri-d": "file:///~dev/purescript/purescript-uri"
+    "purescript-uri": "dariooddenino/purescript-uri#b1061e1a797ab8d1f1b0fec7a43905f29c61fcaa"
   },
   "homepage": "https://github.com/dicefm/purescript-node-mongodb",
   "authors": [
@@ -34,8 +34,5 @@
     "mongodb",
     "mongo"
   ],
-  "license": "MIT",
-  "devDependencies": {
-    "purescript-psci-support": "^1.0.0"
-  }
+  "license": "MIT"
 }
