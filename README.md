@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dicefm/purescript-node-mongodb.svg?branch=master)](https://travis-ci.org/dicefm/purescript-node-mongodb)
 
-An library taking advantage of purescript-aff to enable pain-free asynchronous 
+An library taking advantage of purescript-aff to enable pain-free asynchronous
 MongoDB queries.
 
 ## Getting Started
@@ -18,8 +18,8 @@ bower install purescript-node-mongodb
 You can construct queries with the `mongo` functions:
 
 ```purescript
-main = launchAff $ do
-  db <- attempt $ connect $ defaultOptions
+main = unsafePartial $ void $ launchAff $ do
+  Right db <- attempt $ connect $ defaultOptions
   col <- collection "events" db
   evt <- findOne [ "name" := "Amazing!" ] [ "name" := 1 ] col
 
@@ -44,5 +44,5 @@ The following is likely to be removed in favor of [purescript-uri](https://githu
 ### General
 
 Note: This is a wrapper around the _node_ library and as such is limited to that
-very fact. It's possible to write a better interface (with more time) that 
+very fact. It's possible to write a better interface (with more time) that
 removes the node library and talks directly to the database.

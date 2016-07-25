@@ -4,12 +4,12 @@ module Database.Mongo.Results
 
 import Prelude
 import Data.Argonaut ((.?), jsonEmptyObject)
-import Data.Argonaut.Encode (EncodeJson)
-import Data.Argonaut.Decode (DecodeJson, decodeJson)
+import Data.Argonaut.Encode (class EncodeJson)
+import Data.Argonaut.Decode (class DecodeJson, decodeJson)
 import Data.Either
 import Data.Maybe
 
-newtype WriteResult = WriteResult 
+newtype WriteResult = WriteResult
   { success  :: Boolean
   , total    :: Number
   , inserted :: Maybe Number
@@ -24,7 +24,7 @@ instance decodeJsonWriteResult :: DecodeJson WriteResult where
 
     let inserted = extract $ obj .? "nInserted"
     let modified = extract $ obj .? "nModified"
-    
+
     pure $ WriteResult
       { success  : jsNumberToBool ok
       , total    : n

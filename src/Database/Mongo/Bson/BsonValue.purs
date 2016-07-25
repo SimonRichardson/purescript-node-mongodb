@@ -3,8 +3,9 @@ module Database.Mongo.Bson.BsonValue
   , Field(..)
   , ObjectId(..)
   , BsonValue(..)
-  , IsBsonValue, toBson
+  , class IsBsonValue, toBson
   , (:=)
+  , keyValuePair
   , printBson
   ) where
 
@@ -51,10 +52,10 @@ instance objectIdBson :: IsBsonValue ObjectId where
 instance jsonBson :: IsBsonValue Json where
   toBson = VJson
 
-infix 0 :=
+infix 0 keyValuePair as :=
 
-(:=) :: forall a. (IsBsonValue a) => String -> a -> Tuple String BsonValue
-(:=) f v = Tuple f (toBson v)
+keyValuePair :: forall a. (IsBsonValue a) => String -> a -> Tuple String BsonValue
+keyValuePair f v = Tuple f (toBson v)
 
 printBson :: Document -> Json
 printBson = unsafeToBsonObject
