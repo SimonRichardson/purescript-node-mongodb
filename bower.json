@@ -19,7 +19,7 @@
     "purescript-foldable-traversable": "^1.0.0",
     "purescript-foreign": "^1.0.0",
     "purescript-string-parsers": "^1.0.1",
-    "purescript-uri": "dariooddenino/purescript-uri#b1061e1a797ab8d1f1b0fec7a43905f29c61fcaa"
+    "purescript-uri": "^1.0.0"
   },
   "homepage": "https://github.com/dicefm/purescript-node-mongodb",
   "authors": [
