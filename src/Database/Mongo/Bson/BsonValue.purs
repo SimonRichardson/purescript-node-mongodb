@@ -10,8 +10,8 @@ module Database.Mongo.Bson.BsonValue
   ) where
 
 import Data.Argonaut.Core (Json())
-import Data.String.Regex
-import Data.Tuple
+import Data.String.Regex (Regex)
+import Data.Tuple (Tuple(..))
 
 type Field = Tuple String BsonValue
 

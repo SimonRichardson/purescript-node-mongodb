@@ -6,13 +6,12 @@ module Database.Mongo.Options
   , defaultUpdateOptions, updateOptions
   ) where
 
-import Prelude
+import Prelude (pure, bind, ($))
 import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject)
 import Data.Argonaut.Core (Json())
 import Data.Argonaut.Encode (class EncodeJson, encodeJson)
 import Data.Argonaut.Decode (class DecodeJson, decodeJson)
-import Data.Either
-import Data.Maybe
+import Data.Maybe (Maybe(..))
 
 -- | The type of WriteConcern
 type WriteConcern = Number
