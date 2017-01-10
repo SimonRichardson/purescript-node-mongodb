@@ -30,6 +30,8 @@ main = unsafePartial $ void $ launchAff $ do
 
 See the module documentation for a [full list of these helpers](docs/Database.Mongo.Mongo.md#find)
 
+See the test cases for [more examples](test/Database/Mongo/)
+
 ### Module documentation
 
 - [Database.Mongo.Mongo](docs/Database.Mongo.Mongo.md)
