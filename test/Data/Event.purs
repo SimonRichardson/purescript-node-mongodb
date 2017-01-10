@@ -1,16 +1,11 @@
-module Data.Event where
+module Test.Data.Event where
 
 import Prelude
-import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject, printJson)
-import Data.Argonaut.Core (Json(), JString(), toString)
-import Data.Argonaut.Encode (EncodeJson, encodeJson)
-import Data.Argonaut.Decode (DecodeJson, decodeJson)
-import Data.Date
-import Data.Either
-import Data.Maybe (Maybe(..), maybe)
-import Data.Traversable (traverse)
-
-import Debug.Trace
+import Data.Argonaut (jsonEmptyObject, (~>), (:=), (.?))
+import Data.Argonaut.Encode.Class (class EncodeJson)
+import Data.Argonaut.Decode (decodeJson)
+import Data.Argonaut.Decode.Class (class DecodeJson)
+import Data.Maybe (Maybe)
 
 newtype Event = Event
   { name :: Maybe String
@@ -33,4 +28,5 @@ instance showEvent :: Show Event where
   show (Event e) = "Event " <>
     "{ name: " <> show e.name <>
     "}"
+
 

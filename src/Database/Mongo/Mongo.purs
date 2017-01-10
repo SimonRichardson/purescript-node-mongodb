@@ -17,7 +17,7 @@ module Database.Mongo.Mongo
   , updateMany, updateMany'
   ) where
 
-import Prelude
+import Prelude (class Show, Unit, show, ($), (<<<))
 import Control.Monad.Aff (Aff(), makeAff', Canceler(), nonCanceler)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (Error(), error)
@@ -25,15 +25,15 @@ import Control.Monad.Eff.Exception (Error(), error)
 import Data.Argonaut.Core (Json())
 import Data.Argonaut.Encode (class EncodeJson, encodeJson)
 import Data.Argonaut.Decode (class DecodeJson, decodeJson)
-import Data.Either
+import Data.Either (Either(..))
 import Data.Function.Uncurried (Fn3(), runFn3, Fn4(), runFn4, Fn5(), runFn5, Fn6(), runFn6, Fn7(), runFn7, Fn8(), runFn8)
 
 import Database.Mongo.Options (InsertOptions(), insertOptions, UpdateOptions(), updateOptions)
 import Database.Mongo.Results (WriteResult())
 import Database.Mongo.Bson.BsonValue (Document(), printBson)
-import Data.URI
+import Data.URI (printURIRef, runParseURIRef)
 
-import Text.Parsing.StringParser
+import Text.Parsing.StringParser (ParseError)
 
 -- | The effect type for DB request made with Mongo
 foreign import data DB :: !

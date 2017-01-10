@@ -2,12 +2,12 @@ module Database.Mongo.Results
   ( WriteResult()
   ) where
 
-import Prelude
-import Data.Argonaut ((.?), jsonEmptyObject)
+import Prelude (pure, bind, ($))
+import Data.Argonaut ((.?), (:=), (~>), jsonEmptyObject)
 import Data.Argonaut.Encode (class EncodeJson)
 import Data.Argonaut.Decode (class DecodeJson, decodeJson)
-import Data.Either
-import Data.Maybe
+import Data.Either (Either(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 
 newtype WriteResult = WriteResult
   { success  :: Boolean
@@ -33,14 +33,23 @@ instance decodeJsonWriteResult :: DecodeJson WriteResult where
       }
 
 instance encodeJsonWriteResult :: EncodeJson WriteResult where
-  encodeJson (WriteResult w) = jsonEmptyObject
+  encodeJson (WriteResult w)
+    =  "ok"        := boolToJsNumber w.success
+    ~> "n"         := w.total
+    ~> "nInserted" := fromMaybe 0.0 w.inserted
+    ~> "nModified" := fromMaybe 0.0 w.modified
+    ~> jsonEmptyObject
+
+boolToJsNumber :: Boolean -> Int
+boolToJsNumber false = 0
+boolToJsNumber true = 1
 
 -- node mongodb module sends back `1` to mean `true`, this is why we need types
 -- as Javascript is abused!
-jsNumberToBool :: Either String Int -> Boolean
+jsNumberToBool :: Int -> Boolean
 jsNumberToBool e = case e of
-  Left _  -> false
-  Right x -> if x == 1 then true else false
+  1 -> true
+  _ -> false
 
 extract :: Either String Number -> Maybe Number
 extract e = case e of
