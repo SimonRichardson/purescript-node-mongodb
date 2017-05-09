@@ -1,10 +1,9 @@
 module Test.Data.Event where
 
 import Prelude
-import Data.Argonaut (jsonEmptyObject, (~>), (:=), (.?))
-import Data.Argonaut.Encode.Class (class EncodeJson)
-import Data.Argonaut.Decode (decodeJson)
-import Data.Argonaut.Decode.Class (class DecodeJson)
+import Data.Argonaut.Core (jsonEmptyObject)
+import Data.Argonaut.Encode (class EncodeJson, (:=), (~>))
+import Data.Argonaut.Decode ((.?), decodeJson, class DecodeJson)
 import Data.Maybe (Maybe)
 
 newtype Event = Event
@@ -28,5 +27,3 @@ instance showEvent :: Show Event where
   show (Event e) = "Event " <>
     "{ name: " <> show e.name <>
     "}"
-
-

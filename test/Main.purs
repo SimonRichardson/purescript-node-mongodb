@@ -29,7 +29,7 @@ testUpdate = Update.main
 uri :: String
 uri = "mongodb://127.0.0.1:27017/purescript-node-mongodb-test"
 
-main :: Eff (console :: CONSOLE, db :: DB, err :: EXCEPTION, assert :: ASSERT) Unit
+main :: Eff (console :: CONSOLE, db :: DB, exception :: EXCEPTION, assert :: ASSERT ) Unit
 main = do
   Eff.log "Testing purescript-node-mongodb"
   void $ launchAff do
