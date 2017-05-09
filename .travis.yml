@@ -11,8 +11,7 @@ install:
   - bower install
   - yarn
 before_script:
-  - sleep 15
-  - mongo purescript-node-mongodb-test --eval "show dbs"
+  - sleep 5
 script:
   - purs --version
   - pulp test
