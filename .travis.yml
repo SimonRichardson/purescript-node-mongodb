@@ -1,13 +1,13 @@
 language: node_js
 dist: trusty
 sudo: required
-cache:
-  yarn: true
+cache: yarn
 node_js:
   - 7.9
 install:
   - npm install bower pulp purescript -g
   - bower install
+  - yarn
 script:
   - purs --version
   - pulp test
