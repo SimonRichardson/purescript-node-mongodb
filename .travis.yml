@@ -11,7 +11,7 @@ install:
   - bower install
   - yarn
 before_script:
-  - sleep 5
+  - sleep 6
 script:
   - purs --version
   - pulp test
