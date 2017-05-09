@@ -19,7 +19,7 @@ module Database.Mongo.Mongo
 
 import Prelude (class Show, Unit, show, ($), (<<<))
 import Control.Monad.Aff (Aff(), makeAff', Canceler(), nonCanceler)
-import Control.Monad.Eff (Eff())
+import Control.Monad.Eff (Eff, kind Effect)
 import Control.Monad.Eff.Exception (Error(), error)
 
 import Data.Argonaut.Core (Json())
@@ -33,15 +33,16 @@ import Database.Mongo.Results (WriteResult())
 import Database.Mongo.Bson.BsonValue (Document(), printBson)
 import Data.URI (printURIRef, runParseURIRef)
 
+
 import Text.Parsing.StringParser (ParseError)
 
 -- | The effect type for DB request made with Mongo
-foreign import data DB :: !
+foreign import data DB :: Effect
 
-foreign import data Client :: *
-foreign import data Database :: *
-foreign import data Collection :: *
-foreign import data Cursor :: *
+foreign import data Client :: Type
+foreign import data Database :: Type
+foreign import data Collection :: Type
+foreign import data Cursor :: Type
 
 type AffDatabase e    = Aff (db :: DB | e) Database
 type AffCollection e  = Aff (db :: DB | e) Collection

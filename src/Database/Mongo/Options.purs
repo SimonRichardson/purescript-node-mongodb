@@ -7,10 +7,10 @@ module Database.Mongo.Options
   ) where
 
 import Prelude (pure, bind, ($))
-import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject)
+import Data.Argonaut.Encode (class EncodeJson, (:=), (~>), encodeJson)
+import Data.Argonaut.Decode (class DecodeJson, decodeJson, (.?))
+import Data.Argonaut.Core (jsonEmptyObject)
 import Data.Argonaut.Core (Json())
-import Data.Argonaut.Encode (class EncodeJson, encodeJson)
-import Data.Argonaut.Decode (class DecodeJson, decodeJson)
 import Data.Maybe (Maybe(..))
 
 -- | The type of WriteConcern

@@ -3,9 +3,9 @@ module Database.Mongo.Results
   ) where
 
 import Prelude (pure, bind, ($))
-import Data.Argonaut ((.?), (:=), (~>), jsonEmptyObject)
-import Data.Argonaut.Encode (class EncodeJson)
-import Data.Argonaut.Decode (class DecodeJson, decodeJson)
+import Data.Argonaut.Core (jsonEmptyObject)
+import Data.Argonaut.Encode (class EncodeJson, (:=), (~>))
+import Data.Argonaut.Decode (class DecodeJson, decodeJson, (.?))
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
 
