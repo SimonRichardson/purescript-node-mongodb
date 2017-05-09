@@ -4,10 +4,14 @@ sudo: required
 cache: yarn
 node_js:
   - 7.9
+services:
+  - mongodb
 install:
   - npm install bower pulp purescript -g
   - bower install
   - yarn
+before_script:
+  - sleep 5
 script:
   - purs --version
   - pulp test
