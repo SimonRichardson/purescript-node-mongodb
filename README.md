@@ -1,6 +1,6 @@
 # purescript-node-mongodb
 
-[![Build Status](https://travis-ci.org/dicefm/purescript-node-mongodb.svg?branch=master)](https://travis-ci.org/dicefm/purescript-node-mongodb)
+[![Build Status](https://travis-ci.org/SimonRichardson/purescript-node-mongodb.svg?branch=master)](https://travis-ci.org/SimonRichardson/purescript-node-mongodb)
 
 An library taking advantage of purescript-aff to enable pain-free asynchronous
 MongoDB queries.
