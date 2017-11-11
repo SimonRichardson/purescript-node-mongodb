@@ -2,6 +2,6 @@
 
 'use strict';
 
-exports.hexStringFromObject = function(ObjectId) {
+exports.hexStringFromObject = function(objectId) {
   return objectId.toHexString()
 };
