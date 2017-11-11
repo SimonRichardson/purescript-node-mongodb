@@ -1,23 +1,22 @@
 module Database.Mongo.Bson.BsonValue
   ( Document(..)
   , Field(..)
-  , ObjectId(..)
   , BsonValue(..)
   , class IsBsonValue, toBson
   , (:=)
   , keyValuePair
   , printBson
+  , module Database.Mongo.Bson.ObjectId
   ) where
 
 import Data.Argonaut.Core (Json())
 import Data.String.Regex (Regex)
 import Data.Tuple (Tuple(..))
+import Database.Mongo.Bson.ObjectId (ObjectId(..))
 
 type Field = Tuple String BsonValue
 
 type Document = Array Field
-
-data ObjectId = ObjectId String
 
 data BsonValue
   = VString   String
