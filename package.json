@@ -3,9 +3,9 @@
   "private": true,
   "devDependencies": {
     "gulp": "^3.9.1",
-    "gulp-jsvalidate": "^2.1.0",
-    "gulp-plumber": "^1.1.0",
-    "gulp-purescript": "^1.0.0",
-    "mongodb": "^2.2.4"
+    "gulp-jsvalidate": "^4.0.0",
+    "gulp-plumber": "^1.2.1",
+    "gulp-purescript": "^2.0.1",
+    "mongodb": "^3.1.10"
   }
 }

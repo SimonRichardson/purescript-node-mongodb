@@ -3,9 +3,9 @@ module Test.Data.Event where
 import Prelude
 import Data.Argonaut.Core (jsonEmptyObject)
 import Data.Argonaut.Encode (class EncodeJson, (:=), (~>))
-import Data.Argonaut.Decode ((.?), decodeJson, class DecodeJson)
+import Data.Argonaut.Decode ((.:), decodeJson, class DecodeJson)
 import Data.Maybe (Maybe)
-
+ 
 newtype Event = Event
   { name :: Maybe String
   }
@@ -13,7 +13,7 @@ newtype Event = Event
 instance decodeJsonEvent :: DecodeJson Event where
   decodeJson json = do
     obj  <- decodeJson json
-    name <- obj .? "name"
+    name <- obj .: "name"
     pure $ Event
       { name : name
       }
