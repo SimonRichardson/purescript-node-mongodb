@@ -6,15 +6,20 @@ var gulp = require("gulp"),
     jsvalidate = require("gulp-jsvalidate");
 
 gulp.task("make", function() {
-  return gulp.src(["src/**/*.purs", "bower_components/purescript-*/src/**/*.purs"])
-    .pipe(plumber())
-    .pipe(purescript.pscMake());
+  const src = [
+    "src/**/*.purs", 
+    "bower_components/purescript-*/src/**/*.purs"
+  ];
+  return purescript.compile({ src });
 });
 
 gulp.task("make-test", function() {
-  return gulp.src(["src/**/*.purs", "test/**/*.purs", "bower_components/purescript-*/src/**/*.purs"])
+  return gulp.src([
+    "src/**/*.purs", 
+    "test/**/*.purs", "bower_components/purescript-*/src/**/*.purs"
+  ])
     .pipe(plumber())
-    .pipe(purescript.psc({ main: "Test.Main", output: "test.js" }))
+    .pipe(purescript.psci({ main: "Test.Main", output: "test.js" }))
     .pipe(gulp.dest("tmp/"));
 });
 
@@ -28,10 +33,13 @@ var docTasks = [];
 
 var docTask = function(name) {
   var taskName = "docs-" + name.toLowerCase();
+  
   gulp.task(taskName, function () {
-    return gulp.src("src/" + name.replace(/\./g, "/") + ".purs")
+    const src = "src/" + name.replace(/\./g, "/") + ".purs";
+
+    return gulp.src(src)
       .pipe(plumber())
-      .pipe(purescript.pscDocs())
+      .pipe(purescript.docs({ src }))
       .pipe(gulp.dest("docs/" + name + ".md"));
   });
   docTasks.push(taskName);
