@@ -6,6 +6,6 @@
     "gulp-jsvalidate": "^4.0.0",
     "gulp-plumber": "^1.2.1",
     "gulp-purescript": "^2.0.1",
-    "mongodb": "^3.1.10"
+    "mongodb": "^3.1.13"
   }
 }
